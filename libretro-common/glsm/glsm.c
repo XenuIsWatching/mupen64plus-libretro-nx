@@ -51,6 +51,16 @@ PFNGLCOPYIMAGESUBDATAPROC m_glCopyImageSubData;
 #define GL_SAMPLE_MASK                    0x8E51
 #endif
 
+/* The GLES2 headers do not declare the separate read/draw framebuffer
+ * targets, but an ES2 context request is routinely satisfied with an ES3
+ * context (every Adreno device does this), where both are valid. */
+#ifndef GL_DRAW_FRAMEBUFFER
+#define GL_DRAW_FRAMEBUFFER               0x8CA9
+#endif
+#ifndef GL_READ_FRAMEBUFFER
+#define GL_READ_FRAMEBUFFER               0x8CA8
+#endif
+
 #define MAX_FRAMEBUFFERS 128000
 #define MAX_UNIFORMS 1024
 
@@ -2299,14 +2309,12 @@ void rglBindFramebuffer(GLenum target, GLuint framebuffer)
          gl_state.framebuf[0].desired_location = framebuffer;
          gl_state.framebuf[1].desired_location = framebuffer;
    }
-#ifndef HAVE_OPENGLES2
    else if (target == GL_DRAW_FRAMEBUFFER) {
          gl_state.framebuf[0].desired_location = framebuffer;
    }
    else if (target == GL_READ_FRAMEBUFFER) {
          gl_state.framebuf[1].desired_location = framebuffer;
    }
-#endif
 }
 
 /*
