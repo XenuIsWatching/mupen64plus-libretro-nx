@@ -18,6 +18,10 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+/* rand_s is only declared with this set before <stdlib.h>. */
+#ifdef __MINGW32__
+#define _CRT_RAND_S
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -54,6 +58,7 @@
 #include "osal_files.h"
 #include "main/rom.h"
 #include "device/dd/disk.h"
+#include "device/dd/dd_controller.h"
 #include "plugin/plugin.h"
 #include "device/rcp/pi/pi_controller.h"
 #include "device/pif/pif.h"
@@ -116,6 +121,27 @@ retro_environment_t environ_cb = NULL;
 retro_environment_t environ_clear_thread_waits_cb = NULL;
 
 struct retro_rumble_interface rumble;
+
+/* The 64DD's ACCESS lamp, through RETRO_ENVIRONMENT_GET_LED_INTERFACE. The
+ * drive bumps g_dd_access_counter per sector; a frame in which it moved lights
+ * the lamp, and only the edges are sent. */
+#define DD_LED_ACCESS 0
+static struct retro_led_interface led_iface = { NULL };
+static uint32_t dd_access_seen = 0;
+static int dd_access_led = -1;
+
+static void dd_poll_access_led(void)
+{
+    int on;
+    if (!led_iface.set_led_state)
+        return;
+    on = (g_dd_access_counter != dd_access_seen) ? 1 : 0;
+    dd_access_seen = g_dd_access_counter;
+    if (on == dd_access_led)
+        return;
+    dd_access_led = on;
+    led_iface.set_led_state(DD_LED_ACCESS, on);
+}
 
 save_memory_data saved_memory;
 
@@ -806,6 +832,9 @@ bool retro_load_game_special(unsigned game_type, const struct retro_game_info *i
 void retro_set_environment(retro_environment_t cb)
 {
     environ_cb = cb;
+
+    if (!cb(RETRO_ENVIRONMENT_GET_LED_INTERFACE, &led_iface))
+        led_iface.set_led_state = NULL;
 
     static const struct retro_subsystem_memory_info memory_info_dd[] = {
         { "srm", RETRO_MEMORY_DD },
@@ -2345,6 +2374,7 @@ void retro_run (void)
         // screen_pitch will be 0 for GLN
         video_cb(NULL, retro_screen_width, retro_screen_height, screen_pitch);
     }
+    dd_poll_access_led();
 }
 
 void retro_reset (void)
