@@ -229,6 +229,8 @@ static uint8_t* seek_sector(struct dd_controller* dd)
     return sector_base;
 }
 
+uint32_t g_dd_access_counter = 0;
+
 static void read_sector(struct dd_controller* dd)
 {
     size_t i;
@@ -236,6 +238,7 @@ static void read_sector(struct dd_controller* dd)
     if (disk_sec == NULL) {
         return;
     }
+    ++g_dd_access_counter;
 
     size_t length = dd->regs[DD_ASIC_HOST_SECBYTE] + 1;
 
@@ -251,6 +254,7 @@ static void write_sector(struct dd_controller* dd)
     if (disk_sec == NULL) {
         return;
     }
+    ++g_dd_access_counter;
 
     size_t length = dd->regs[DD_ASIC_HOST_SECBYTE] + 1;
 

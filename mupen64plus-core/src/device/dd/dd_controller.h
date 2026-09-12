@@ -108,6 +108,10 @@ static osal_inline uint32_t dd_rom_address(uint32_t address)
 }
 
 
+/* Bumped on every sector the drive reads or writes. Not part of the emulated
+ * state -- a frontend polls it per frame to drive the drive's ACCESS lamp. */
+extern uint32_t g_dd_access_counter;
+
 void init_dd(struct dd_controller* dd,
              void* clock, const struct clock_backend_interface* iclock,
              const uint32_t* rom, size_t rom_size,
