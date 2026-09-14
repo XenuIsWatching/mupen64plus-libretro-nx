@@ -213,6 +213,11 @@ jobs:
           cartridge is present, and a block-number/loop-index mix-up in the disk
           format scan.
 
+          It publishes the 64DD's ACCESS lamp on LED 0 of the LED interface, lit
+          on every frame in which the drive read or wrote a sector. The count
+          behind it is not emulated state, so savestates and netplay are
+          untouched.
+
           The Android asset is the gles3 core, matching the buildbot's naming:
           it publishes no plain mupen64plus_next for Android, and the gles2
           build runs at full speed on a Quest without drawing a pixel.
